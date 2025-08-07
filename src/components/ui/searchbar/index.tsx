@@ -10,13 +10,11 @@ import {
   AutocompleteDropdown,
   AutocompleteOption,
   AutocompleteOptionLabel,
-  AutocompleteOptionType,
 } from "./styles";
 
 interface AutocompleteOption {
   value: string;
   label: string;
-  type?: string;
 }
 
 interface AutocompleteSearchBarProps {
@@ -26,7 +24,6 @@ interface AutocompleteSearchBarProps {
   onSearch?: (query: string) => void;
   onSelect?: (option: AutocompleteOption) => void;
   options?: AutocompleteOption[];
-  debounceMs?: number;
   disabled?: boolean;
   className?: string;
 }
@@ -38,12 +35,10 @@ const AutocompleteSearchBar: React.FC<AutocompleteSearchBarProps> = ({
   onSearch,
   onSelect,
   options = [],
-  debounceMs = 300,
   disabled = false,
   className,
 }) => {
   const [inputValue, setInputValue] = useState(value);
-  const [debouncedValue, setDebouncedValue] = useState(value);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const {
@@ -60,28 +55,6 @@ const AutocompleteSearchBar: React.FC<AutocompleteSearchBarProps> = ({
     minQueryLength: 2,
   });
 
-  // Update internal state when prop changes
-  useEffect(() => {
-    setInputValue(value);
-  }, [value]);
-
-  // Debounce effect
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedValue(inputValue);
-    }, debounceMs);
-
-    return () => clearTimeout(timer);
-  }, [inputValue, debounceMs]);
-
-  // Call onSearch when debounced value changes
-  useEffect(() => {
-    if (onSearch && debouncedValue !== value) {
-      onSearch(debouncedValue);
-    }
-  }, [debouncedValue, onSearch, value]);
-
-  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -102,10 +75,8 @@ const AutocompleteSearchBar: React.FC<AutocompleteSearchBarProps> = ({
       setInputValue(newValue);
       onChange?.(newValue);
 
-      // Llamar a onSearch inmediatamente cuando se vacía el input
       if (newValue === "") {
         onSearch?.("");
-        setDebouncedValue(""); // Resetear el debounce también
       }
 
       if (newValue.length >= 2) {
@@ -119,7 +90,6 @@ const AutocompleteSearchBar: React.FC<AutocompleteSearchBarProps> = ({
 
   const handleClear = useCallback(() => {
     setInputValue("");
-    setDebouncedValue(""); // Resetear el debounce también
     onChange?.("");
     onSearch?.("");
     closeDropdown();
@@ -140,27 +110,31 @@ const AutocompleteSearchBar: React.FC<AutocompleteSearchBarProps> = ({
       if (e.key === "Enter") {
         if (selectedIndex >= 0 && filteredOptions[selectedIndex]) {
           handleOptionSelect(filteredOptions[selectedIndex]);
-        } else {
-          onSearch?.(inputValue);
+        } else if (filteredOptions.length > 0) {
+          handleOptionSelect(filteredOptions[0]);
         }
         return;
       }
 
       handleKeyDown(e);
     },
-    [
-      selectedIndex,
-      filteredOptions,
-      handleOptionSelect,
-      onSearch,
-      inputValue,
-      handleKeyDown,
-    ]
+    [selectedIndex, filteredOptions, handleOptionSelect, handleKeyDown]
   );
 
   return (
     <SearchBarContainer ref={containerRef} className={className}>
-      <SearchIcon>
+      <SearchIcon
+        onClick={() => {
+          if (filteredOptions.length > 0) {
+            if (selectedIndex >= 0 && filteredOptions[selectedIndex]) {
+              handleOptionSelect(filteredOptions[selectedIndex]);
+            } else {
+              handleOptionSelect(filteredOptions[0]);
+            }
+          }
+        }}
+        style={{ cursor: filteredOptions.length > 0 ? "pointer" : "default" }}
+      >
         <FontAwesomeIcon icon={faSearch} />
       </SearchIcon>
       <SearchInput
@@ -191,9 +165,6 @@ const AutocompleteSearchBar: React.FC<AutocompleteSearchBarProps> = ({
               onClick={() => handleOptionSelect(option)}
             >
               <AutocompleteOptionLabel>{option.label}</AutocompleteOptionLabel>
-              {option.type && (
-                <AutocompleteOptionType>{option.type}</AutocompleteOptionType>
-              )}
             </AutocompleteOption>
           ))}
         </AutocompleteDropdown>

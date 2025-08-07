@@ -11,7 +11,7 @@ import { useProperties } from "@/hooks/useProperties";
 import { useURLFilters } from "@/hooks/useURLFilters";
 import { SearchOption } from "@/data/searchOptions";
 import { useState, useMemo, useEffect } from "react";
-import { PropertiesQueryVariables, Property } from "@/gql/graphql";
+import { PropertiesQueryVariables } from "@/gql/graphql";
 import { DashboardContainer, MainContent, ContentWrapper } from "./styles";
 import Properties from "./components/properties";
 import Map from "./components/map";
@@ -25,6 +25,7 @@ const DashboardContent: React.FC = () => {
     types: [],
     bedrooms: 0,
     bathrooms: 0,
+    location: { city: "" },
   });
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -34,11 +35,11 @@ const DashboardContent: React.FC = () => {
     return {
       orderBy: [
         {
-          lastPublishDate: "desc",
+          lastPublishDate: "asc",
         },
       ],
       take: itemsPerPage,
-      skip: 92 + (currentPage - 1) * itemsPerPage,
+      skip: (currentPage - 1) * itemsPerPage,
       ...convertToGraphQLVariables(filters),
     };
   }, [convertToGraphQLVariables, filters, currentPage, itemsPerPage]);
@@ -46,20 +47,8 @@ const DashboardContent: React.FC = () => {
   const { properties, totalCount, loading, error, refetch } =
     useProperties(graphQLVariables);
 
-  const filteredProperties = useMemo(() => {
-    if (!searchQuery.trim()) return properties;
-
-    const query = searchQuery.toLowerCase();
-    return properties.filter(
-      (property: Property) =>
-        property.title?.toLowerCase().includes(query) ||
-        property.type?.toLowerCase().includes(query) ||
-        property.objective?.toLowerCase().includes(query) ||
-        property.price?.toString().includes(query) ||
-        property.location?.city?.toLowerCase().includes(query) ||
-        property.location?.state?.toLowerCase().includes(query)
-    );
-  }, [properties, searchQuery]);
+  // Ya no necesitamos filtrar localmente porque la búsqueda se hace en GraphQL
+  const filteredProperties = properties;
 
   const totalPages = Math.ceil(totalCount / itemsPerPage);
 
@@ -77,7 +66,7 @@ const DashboardContent: React.FC = () => {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [filters, searchQuery]);
+  }, [filters]);
 
   useURLFilters({
     filters,
@@ -88,10 +77,20 @@ const DashboardContent: React.FC = () => {
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
+    if (!query.trim()) {
+      setFilters((prevFilters) => ({
+        ...prevFilters,
+        location: { city: "" },
+      }));
+    }
   };
 
   const handleSelectOption = (option: SearchOption) => {
     setSearchQuery(option.label);
+    setFilters((prevFilters) => ({
+      ...prevFilters,
+      location: { city: option.value },
+    }));
   };
 
   const handleFiltersChange = (newFilters: Record<string, unknown>) => {

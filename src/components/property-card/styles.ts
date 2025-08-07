@@ -10,7 +10,7 @@ const StyledCard = styled.div`
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   transition: transform 0.2s ease-in-out, box-shadow 0.2s ease;
   height: 100%;
-  min-height: 29rem;
+  max-height: 29rem;
   
   &:hover {
     transform: translateY(-2px);

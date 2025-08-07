@@ -7,7 +7,7 @@ type TButtonSize = 'sm' | 'md' | 'lg' | 'xl';
 interface IButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: TButtonVariant;
   size?: TButtonSize;
-  children: ReactNode;
+  children?: ReactNode;
   leftIcon?: ReactNode;
   rightIcon?: ReactNode;
   loading?: boolean;

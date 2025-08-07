@@ -1,5 +1,5 @@
 import React, { useCallback } from "react";
-import { faHome, faFilter } from "@fortawesome/free-solid-svg-icons";
+import { faHome, faBars } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useCollapsible } from "@/contexts/CollapsibleContext";
 import Button from "@/components/ui/button";
@@ -47,9 +47,7 @@ const Navbar: React.FC<NavbarProps> = ({ onSearch, onSelectOption }) => {
           variant="ghost"
           onClick={handleHomeClick}
           leftIcon={<FontAwesomeIcon icon={faHome} />}
-        >
-          Home
-        </Button>
+        />
       </NavbarLeft>
 
       <NavbarCenter>
@@ -58,18 +56,15 @@ const Navbar: React.FC<NavbarProps> = ({ onSearch, onSelectOption }) => {
           onSearch={handleSearch}
           onSelect={handleSelectOption}
           options={searchOptions}
-          debounceMs={500}
         />
       </NavbarCenter>
 
       <NavbarRight>
         <Button
-          variant="secondary"
+          variant="ghost"
           onClick={toggle}
-          leftIcon={<FontAwesomeIcon icon={faFilter} />}
-        >
-          Filtros
-        </Button>
+          leftIcon={<FontAwesomeIcon icon={faBars} />}
+        />
       </NavbarRight>
     </NavbarContainer>
   );

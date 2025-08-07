@@ -10,19 +10,22 @@ export interface PropertyFilters {
   types?: string[];
   bedrooms?: number;
   bathrooms?: number;
+  location?: {
+    city?: string;
+  };
 }
 
 // Deberia traer los tipos basado en un enum de la api
 export type TPropertyType = "Casa" | "Apartamento" | "Oficina" | "LocalComercial" | "Lote";
 
 export const usePropertyFilters = () => {
-  const propertyTypes: Record<TPropertyType, string> = {
+  const propertyTypes: Record<TPropertyType, string> = useMemo(() => ({
     Casa: "Casa",
     Apartamento: "Apartamento",
     Oficina: "Oficina",
     LocalComercial: "Local Comercial",
     Lote: "Lote",
-  };
+  }), []);
   
   // Configuración de filtros para propiedades
   const filterConfigs: IFilterConfig[] = useMemo(
@@ -69,7 +72,7 @@ export const usePropertyFilters = () => {
         defaultValue: "0",  
       },
     ],
-    []
+    [propertyTypes]
   );
 
   // Función para filtrar propiedades
@@ -125,6 +128,7 @@ export const usePropertyFilters = () => {
       types: genericFilters.types as string[],
       bedrooms: Number(genericFilters.bedrooms as string),
       bathrooms: Number(genericFilters.bathrooms as string),
+      location: genericFilters.location as { city?: string },
     };
   };
 
@@ -137,6 +141,9 @@ export const usePropertyFilters = () => {
         type?: { in: string[] };
         bedrooms?: { gte: number };
         bathrooms?: { gte: string };
+        location?: {
+          city?: { contains: string };
+        };
       };
     } = {
       where: {
@@ -164,6 +171,13 @@ export const usePropertyFilters = () => {
     // Bathrooms filter
     if (filters.bathrooms && filters.bathrooms > 0) {
       variables.where.bathrooms = { gte: String(filters.bathrooms) };
+    }
+
+    // Location filter
+    if (filters.location && filters.location.city) {
+      variables.where.location = {
+        city: { contains: filters.location.city },
+      };
     }
 
     return variables;
