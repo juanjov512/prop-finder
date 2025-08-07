@@ -15,4 +15,5 @@ export const client = new ApolloClient({
       errorPolicy: 'all',
     },
   },
+  ssrMode: typeof window === 'undefined',
 }); 
