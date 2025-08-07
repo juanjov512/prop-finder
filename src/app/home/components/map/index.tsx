@@ -32,7 +32,7 @@ const Map: React.FC<IMapProps> = ({ properties }: IMapProps) => {
     <MapContainer>
       <MapPlaceholder>
         <LoadScript
-          googleMapsApiKey={"AIzaSyBtJN4UJaxPWFbm_ZXY4dDnVth4gPw-2tA"}
+          googleMapsApiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || ""}
         >
           <GoogleMap
             mapContainerStyle={containerStyle}
