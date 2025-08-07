@@ -1,3 +1,5 @@
+"use client";
+
 import Filters from "@/components/filters";
 import Navbar from "@/components/navbar";
 import { CollapsibleProvider } from "@/contexts/CollapsibleContext";
