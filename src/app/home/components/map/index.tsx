@@ -12,6 +12,7 @@ import PropertyCardContent from "@/components/property-card/property-card-conten
 
 interface IMapProps {
   properties: Property[];
+  isVisible: boolean;
 }
 
 const containerStyle = {
@@ -19,7 +20,7 @@ const containerStyle = {
   height: "100%",
 };
 
-const Map: React.FC<IMapProps> = ({ properties }: IMapProps) => {
+const Map: React.FC<IMapProps> = ({ properties, isVisible }: IMapProps) => {
   const [selected, setSelected] = useState<Property | null>(null);
   const [mapRef, setMapRef] = useState<google.maps.Map | null>(null);
 
@@ -30,7 +31,7 @@ const Map: React.FC<IMapProps> = ({ properties }: IMapProps) => {
   }, [properties]);
 
   return (
-    <MapContainer>
+    <MapContainer $isVisible={isVisible}>
       <MapPlaceholder>
         <LoadScript
           googleMapsApiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || ""}

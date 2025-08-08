@@ -1,5 +1,5 @@
 import React, { ChangeEvent, useCallback } from "react";
-import type { RangeInputProps } from "./types";
+import type { IRangeInputProps } from "./types";
 import {
   RangeContainer,
   RangeLabel,
@@ -13,7 +13,7 @@ import {
   SliderWrapper,
 } from "./styles";
 
-const NumberRangeInput: React.FC<RangeInputProps> = ({
+const NumberRangeInput: React.FC<IRangeInputProps> = ({
   value,
   min = 0,
   max = 100,

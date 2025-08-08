@@ -5,22 +5,29 @@ import Navbar from "@/components/navbar";
 import { CollapsibleProvider } from "@/contexts/CollapsibleContext";
 import {
   usePropertyFilters,
-  PropertyFilters,
+  IPropertyFilters,
 } from "@/hooks/usePropertyFilters";
 import { useProperties } from "@/hooks/useProperties";
 import { useSearch } from "@/hooks/useSearch";
 import { SearchOption } from "@/data/searchOptions";
 import { useState, useMemo, useEffect } from "react";
 import { PropertiesQueryVariables } from "@/gql/graphql";
-import { DashboardContainer, MainContent, ContentWrapper } from "./styles";
+import {
+  DashboardContainer,
+  MainContent,
+  ContentWrapper,
+  ToggleViewButton,
+} from "./styles";
 import Properties from "./components/properties";
 import Map from "./components/map";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faList, faMap } from "@fortawesome/free-solid-svg-icons";
 
 const DashboardContent: React.FC = () => {
   const { filterConfigs, convertToPropertyFilters, convertToGraphQLVariables } =
     usePropertyFilters();
 
-  const [filters, setFilters] = useState<PropertyFilters>({
+  const [filters, setFilters] = useState<IPropertyFilters>({
     price: { min: 0, max: 1000000000 },
     types: [],
     bedrooms: 0,
@@ -58,7 +65,6 @@ const DashboardContent: React.FC = () => {
   const { properties, totalCount, loading, error, refetch } =
     useProperties(graphQLVariables);
 
-  // Ya no necesitamos filtrar localmente porque la búsqueda se hace en GraphQL
   const filteredProperties = properties;
 
   const totalPages = Math.ceil(totalCount / itemsPerPage);
@@ -100,6 +106,9 @@ const DashboardContent: React.FC = () => {
     refetch();
   };
 
+  const [showMap, setShowMap] = useState(false);
+  const toggleView = () => setShowMap(!showMap);
+
   return (
     <CollapsibleProvider>
       <DashboardContainer>
@@ -114,6 +123,13 @@ const DashboardContent: React.FC = () => {
             onFiltersChange={handleFiltersChange}
           />
           <ContentWrapper>
+            <ToggleViewButton onClick={toggleView}>
+              {showMap ? (
+                <FontAwesomeIcon icon={faList} />
+              ) : (
+                <FontAwesomeIcon icon={faMap} />
+              )}
+            </ToggleViewButton>
             <Properties
               properties={filteredProperties}
               totalCount={totalCount}
@@ -124,7 +140,7 @@ const DashboardContent: React.FC = () => {
               totalPages={totalPages}
               onPageChange={handlePageChange}
             />
-            <Map properties={filteredProperties} />
+            <Map properties={filteredProperties} isVisible={showMap} />
           </ContentWrapper>
         </MainContent>
       </DashboardContainer>

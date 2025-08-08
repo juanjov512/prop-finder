@@ -1,3 +1,4 @@
+import { devices } from "@/styles/breakpoints";
 import styled from "styled-components";
 
 const NavbarContainer = styled.nav`
@@ -24,6 +25,14 @@ const NavbarCenter = styled.div`
   justify-content: center;
   max-width: 600px;
   margin: 0 ${({ theme }) => theme.spacing['2xl']};
+
+  @media ${devices.mobile} {
+    margin: 0 ${({ theme }) => theme.spacing.xs};
+  }
+
+  @media ${devices.tablet} {
+    max-width: 400px;
+  }
 `;
 
 const NavbarRight = styled.div`

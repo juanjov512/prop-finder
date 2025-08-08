@@ -11,24 +11,9 @@ import {
   AutocompleteOption,
   AutocompleteOptionLabel,
 } from "./styles";
+import type { IAutocompleteOption, IAutocompleteSearchBarProps } from "./types";
 
-interface AutocompleteOption {
-  value: string;
-  label: string;
-}
-
-interface AutocompleteSearchBarProps {
-  placeholder?: string;
-  value?: string;
-  onChange?: (value: string) => void;
-  onSearch?: (query: string) => void;
-  onSelect?: (option: AutocompleteOption) => void;
-  options?: AutocompleteOption[];
-  disabled?: boolean;
-  className?: string;
-}
-
-const AutocompleteSearchBar: React.FC<AutocompleteSearchBarProps> = ({
+const AutocompleteSearchBar: React.FC<IAutocompleteSearchBarProps> = ({
   placeholder,
   value = "",
   onChange,
@@ -100,7 +85,7 @@ const AutocompleteSearchBar: React.FC<AutocompleteSearchBarProps> = ({
   }, [onChange, onSearch, closeDropdown]);
 
   const handleOptionSelect = useCallback(
-    (option: AutocompleteOption) => {
+    (option: IAutocompleteOption) => {
       setInputValue(option.label);
       onChange?.(option.label);
       onSelect?.(option);

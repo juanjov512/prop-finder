@@ -18,11 +18,11 @@ export const useCollapsible = () => {
   return context;
 };
 
-interface CollapsibleProviderProps {
+interface ICollapsibleProviderProps {
   children: ReactNode;
 }
 
-export const CollapsibleProvider: React.FC<CollapsibleProviderProps> = ({
+export const CollapsibleProvider: React.FC<ICollapsibleProviderProps> = ({
   children,
 }) => {
   const [isOpen, setIsOpen] = useState(false);

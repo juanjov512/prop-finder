@@ -1,11 +1,11 @@
 import { useCallback, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { PropertyFilters } from '@/hooks/usePropertyFilters';
+import { IPropertyFilters } from '@/hooks/usePropertyFilters';
 
-interface UseURLFiltersOptions {
-  filters: PropertyFilters;
+interface IUseURLFiltersOptions {
+  filters: IPropertyFilters;
   searchQuery: string;
-  onFiltersChange: (filters: PropertyFilters) => void;
+  onFiltersChange: (filters: IPropertyFilters) => void;
   onSearchChange: (query: string) => void;
 }
 
@@ -14,12 +14,11 @@ export const useURLFilters = ({
   searchQuery,
   onFiltersChange,
   onSearchChange
-}: UseURLFiltersOptions) => {
+}: IUseURLFiltersOptions) => {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  // Convertir filtros a URL params
-  const filtersToURL = useCallback((filters: PropertyFilters, search: string) => {
+  const filtersToURL = useCallback((filters: IPropertyFilters, search: string) => {
     const params = new URLSearchParams();
     
     if (search) {
@@ -49,8 +48,7 @@ export const useURLFilters = ({
     return params.toString();
   }, []);
 
-  // Convertir URL params a filtros
-  const urlToFilters = useCallback((): { filters: PropertyFilters; search: string } => {
+  const urlToFilters = useCallback((): { filters: IPropertyFilters; search: string } => {
     if (!searchParams) {
       return { 
         filters: {
@@ -81,8 +79,6 @@ export const useURLFilters = ({
     };
   }, [searchParams]);
 
-  // Sincronizar filtros con URL al cargar
-  // Solo sincronizar filtros desde la URL al montar
   useEffect(() => {
     const { filters: urlFilters, search: urlSearch } = urlToFilters();
     const urlHasFilters = (
@@ -100,13 +96,11 @@ export const useURLFilters = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Actualizar URL cuando cambien los filtros
   useEffect(() => {
     const urlParams = filtersToURL(filters, searchQuery);
     const currentURL = window.location.search;
     const newURL = urlParams ? `?${urlParams}` : window.location.pathname;
     
-    // Solo actualizar si la URL realmente cambió
     if (currentURL !== newURL) {
       router.replace(newURL, { scroll: false });
     }

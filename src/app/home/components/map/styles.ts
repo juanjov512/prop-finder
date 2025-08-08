@@ -1,17 +1,20 @@
 import styled from "styled-components";
 import { devices } from "@/styles/breakpoints";
 
-const MapContainer = styled.div`
+const MapContainer = styled.div<{ $isVisible: boolean }>`
   flex: 0 0 40%;
   border-left: 1px solid ${({ theme }) => theme.colors.gray[200]};
   top: 0;
   position: sticky;
-  height: 100vh;
+  height: 100%;
   
   @media ${devices.mobile} {
-    display: none;
+    height: ${({ $isVisible }) => $isVisible ? "100%" : "0"};
+    width: ${({ $isVisible }) => $isVisible ? "100%" : "0"};
+    position: ${({ $isVisible }) => $isVisible ? "fixed" : "sticky"};
+    display: ${({ $isVisible }) => $isVisible ? "block" : "none"};
   }
-  
+
   @media ${devices.tablet} {
     flex: 0 0 50%;
   }

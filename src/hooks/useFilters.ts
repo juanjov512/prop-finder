@@ -4,13 +4,13 @@ import { PropertiesQueryVariables } from '@/gql/graphql';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { getJSONFromStorage, setJSONToStorage } from '@/utils/storage';
 
-export interface FilterState {
+export interface IFilterState {
   [key: string]: unknown;
 }
 
-export interface UseFiltersProps {
+export interface IUseFiltersProps {
   filters: IFilterConfig[];
-  onFiltersChange?: (filters: FilterState) => void;
+  onFiltersChange?: (filters: IFilterState) => void;
   storageKey?: string;
 }
 
@@ -18,14 +18,14 @@ export const useFilters = ({
   filters: initialFilters, 
   onFiltersChange,
   storageKey = 'property-filters'
-}: UseFiltersProps) => {
+}: IUseFiltersProps) => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const isInitialized = useRef(false);
   const lastAppliedFilters = useRef<string>('');
 
   const initialFilterState = useMemo(() => {
-    const initialState: FilterState = {};
+    const initialState: IFilterState = {};
     initialFilters.forEach(filter => {
       switch (filter.type) {
         case 'range':
@@ -50,7 +50,7 @@ export const useFilters = ({
 
   const loadInitialFilters = useCallback(() => {
     if (searchParams) {
-      const urlFilters: FilterState = { ...initialFilterState };
+      const urlFilters: IFilterState = { ...initialFilterState };
       let hasURLFilters = false;
       
       initialFilters.forEach(filter => {
@@ -95,13 +95,13 @@ export const useFilters = ({
       }
     }
 
-    return getJSONFromStorage<FilterState>(storageKey, initialFilterState);
+    return getJSONFromStorage<IFilterState>(storageKey, initialFilterState);
   }, [searchParams, initialFilters, initialFilterState, storageKey]);
 
-  const [pendingFilters, setPendingFilters] = useState<FilterState>(() => loadInitialFilters());
-  const [appliedFilters, setAppliedFilters] = useState<FilterState>(() => loadInitialFilters());
+  const [pendingFilters, setPendingFilters] = useState<IFilterState>(() => loadInitialFilters());
+  const [appliedFilters, setAppliedFilters] = useState<IFilterState>(() => loadInitialFilters());
 
-  const updateURL = useCallback((filters: FilterState) => {
+  const updateURL = useCallback((filters: IFilterState) => {
     const params = new URLSearchParams();
     
     Object.entries(filters).forEach(([key, value]) => {

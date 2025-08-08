@@ -9,11 +9,11 @@ const PaginationContainer = styled.div`
   flex-wrap: wrap;
 `;
 
-interface PageButtonProps {
+interface IPageButtonProps {
   $isActive: boolean;
 }
 
-const PageButton = styled.button<PageButtonProps>`
+const PageButton = styled.button<IPageButtonProps>`
   display: flex;
   justify-content: center;
   align-items: center;
@@ -45,13 +45,13 @@ const PageButton = styled.button<PageButtonProps>`
   }
 `;
 
-interface NavigationButtonProps {
+interface INavigationButtonProps {
   $isActive?: boolean;
 }
 
 const NavigationButton = styled(PageButton).withConfig({
   shouldForwardProp: (prop) => prop !== '$isActive',
-})<NavigationButtonProps>`
+})<INavigationButtonProps>`
   background-color: transparent;
   border-color: ${({ theme }) => theme.colors.gray[200]};
   color: ${({ theme }) => theme.colors.gray[900]};
