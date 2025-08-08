@@ -6,6 +6,7 @@ import {
   faRulerCombined,
   faImage,
 } from "@fortawesome/free-solid-svg-icons";
+import Image from "next/image";
 import {
   CardContent,
   Details,
@@ -14,7 +15,6 @@ import {
   CardHeader,
   Price,
 } from "./styles";
-import LazyImage from "@/components/ui/image-lazy";
 import type { IPropertyCardContentProps } from "./types";
 
 const PropertyCardContent: React.FC<IPropertyCardContentProps> = React.memo(
@@ -50,11 +50,19 @@ const PropertyCardContent: React.FC<IPropertyCardContentProps> = React.memo(
         </CardHeader>
         {mainImage && (
           <ImageContainer>
-            <LazyImage
+            <Image
               src={mainImage}
               alt={title || "Propiedad"}
+              width={200}
               height={200}
-              placeholder="Cargando imagen..."
+              style={{
+                position: "relative",
+                width: "100%",
+                height: "100%",
+                overflow: "hidden",
+                borderRadius: "0.375rem",
+                objectFit: "cover",
+              }}
             />
             {imageCount > 1 && (
               <ImageCounter>

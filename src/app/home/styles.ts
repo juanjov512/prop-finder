@@ -1,4 +1,4 @@
-import styled, { css } from "styled-components";
+import styled from "styled-components";
 import { devices } from "@/styles/breakpoints";
 
 const DashboardContainer = styled.div`

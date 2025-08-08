@@ -13,6 +13,7 @@ const FiltersContainer = styled.div<{ $isOpen: boolean }>`
   background: ${({ theme }) => theme.colors.white};
   border-right: 1px solid ${({ theme }) => theme.colors.gray[200]};
   overflow-y: auto;
+  overflow-x: hidden;
 `;
 
 const Header = styled.div`

@@ -1,4 +1,3 @@
-import type { DefaultTheme } from "styled-components";
 import { theme } from "../lib/theme";
 
 declare module "styled-components" {
