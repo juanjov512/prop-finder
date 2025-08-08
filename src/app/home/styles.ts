@@ -31,8 +31,8 @@ const ContentWrapper = styled.div`
 
 const ToggleViewButton = styled.button`
   position: fixed;
-  top: 6rem;
-  right: 3rem;
+  top: 80px;
+  right: 16px;
   z-index: 100;
   float: right;
   background: ${({ theme }) => theme.colors.white};
