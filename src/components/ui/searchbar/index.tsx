@@ -41,6 +41,10 @@ const AutocompleteSearchBar: React.FC<AutocompleteSearchBarProps> = ({
   const [inputValue, setInputValue] = useState(value);
   const containerRef = useRef<HTMLDivElement>(null);
 
+  useEffect(() => {
+    setInputValue(value);
+  }, [value]);
+
   const {
     filteredOptions,
     isOpen,
@@ -112,13 +116,22 @@ const AutocompleteSearchBar: React.FC<AutocompleteSearchBarProps> = ({
           handleOptionSelect(filteredOptions[selectedIndex]);
         } else if (filteredOptions.length > 0) {
           handleOptionSelect(filteredOptions[0]);
+        } else {
+          onSearch?.(inputValue);
         }
         return;
       }
 
       handleKeyDown(e);
     },
-    [selectedIndex, filteredOptions, handleOptionSelect, handleKeyDown]
+    [
+      selectedIndex,
+      filteredOptions,
+      handleOptionSelect,
+      handleKeyDown,
+      inputValue,
+      onSearch,
+    ]
   );
 
   return (
@@ -131,9 +144,16 @@ const AutocompleteSearchBar: React.FC<AutocompleteSearchBarProps> = ({
             } else {
               handleOptionSelect(filteredOptions[0]);
             }
+          } else {
+            onSearch?.(inputValue);
           }
         }}
-        style={{ cursor: filteredOptions.length > 0 ? "pointer" : "default" }}
+        style={{
+          cursor:
+            filteredOptions.length > 0 || inputValue.trim()
+              ? "pointer"
+              : "default",
+        }}
       >
         <FontAwesomeIcon icon={faSearch} />
       </SearchIcon>

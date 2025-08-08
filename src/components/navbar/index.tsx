@@ -12,12 +12,17 @@ import {
   NavbarRight,
 } from "./styles";
 
-interface NavbarProps {
+interface INavbarProps {
+  searchQuery?: string;
   onSearch: (query: string) => void;
   onSelectOption?: (option: SearchOption) => void;
 }
 
-const Navbar: React.FC<NavbarProps> = ({ onSearch, onSelectOption }) => {
+const Navbar: React.FC<INavbarProps> = ({
+  searchQuery = "",
+  onSearch,
+  onSelectOption,
+}) => {
   const { toggle } = useCollapsible();
 
   const handleSearch = useCallback(
@@ -53,6 +58,7 @@ const Navbar: React.FC<NavbarProps> = ({ onSearch, onSelectOption }) => {
       <NavbarCenter>
         <AutocompleteSearchBar
           placeholder="Buscar propiedades..."
+          value={searchQuery}
           onSearch={handleSearch}
           onSelect={handleSelectOption}
           options={searchOptions}

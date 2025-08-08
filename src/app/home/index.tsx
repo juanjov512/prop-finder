@@ -8,7 +8,7 @@ import {
   PropertyFilters,
 } from "@/hooks/usePropertyFilters";
 import { useProperties } from "@/hooks/useProperties";
-import { useURLFilters } from "@/hooks/useURLFilters";
+import { useSearch } from "@/hooks/useSearch";
 import { SearchOption } from "@/data/searchOptions";
 import { useState, useMemo, useEffect } from "react";
 import { PropertiesQueryVariables } from "@/gql/graphql";
@@ -27,9 +27,20 @@ const DashboardContent: React.FC = () => {
     bathrooms: 0,
     location: { city: "" },
   });
-  const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 40;
+
+  const { searchQuery, updateSearch } = useSearch({
+    onSearchChange: (query: string) => {
+      if (!query.trim()) {
+        setFilters((prevFilters) => ({
+          ...prevFilters,
+          location: { city: "" },
+        }));
+      }
+    },
+    storageKey: "property-search",
+  });
 
   const graphQLVariables: PropertiesQueryVariables = useMemo(() => {
     return {
@@ -68,25 +79,12 @@ const DashboardContent: React.FC = () => {
     setCurrentPage(1);
   }, [filters]);
 
-  useURLFilters({
-    filters,
-    searchQuery,
-    onFiltersChange: setFilters,
-    onSearchChange: setSearchQuery,
-  });
-
   const handleSearch = (query: string) => {
-    setSearchQuery(query);
-    if (!query.trim()) {
-      setFilters((prevFilters) => ({
-        ...prevFilters,
-        location: { city: "" },
-      }));
-    }
+    updateSearch(query);
   };
 
   const handleSelectOption = (option: SearchOption) => {
-    setSearchQuery(option.label);
+    updateSearch(option.label);
     setFilters((prevFilters) => ({
       ...prevFilters,
       location: { city: option.value },
@@ -105,7 +103,11 @@ const DashboardContent: React.FC = () => {
   return (
     <CollapsibleProvider>
       <DashboardContainer>
-        <Navbar onSearch={handleSearch} onSelectOption={handleSelectOption} />
+        <Navbar
+          searchQuery={searchQuery}
+          onSearch={handleSearch}
+          onSelectOption={handleSelectOption}
+        />
         <MainContent>
           <Filters
             filters={filterConfigs}

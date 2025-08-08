@@ -1,7 +1,8 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { IFilterConfig } from '@/components/filters/types';
 import { PropertiesQueryVariables } from '@/gql/graphql';
-
+import { useSearchParams, useRouter } from 'next/navigation';
+import { getJSONFromStorage, setJSONToStorage } from '@/utils/storage';
 
 export interface FilterState {
   [key: string]: unknown;
@@ -10,10 +11,19 @@ export interface FilterState {
 export interface UseFiltersProps {
   filters: IFilterConfig[];
   onFiltersChange?: (filters: FilterState) => void;
+  storageKey?: string;
 }
 
-export const useFilters = ({ filters: initialFilters, onFiltersChange }: UseFiltersProps) => {
-  // Initialize filter state based on filter configurations
+export const useFilters = ({ 
+  filters: initialFilters, 
+  onFiltersChange,
+  storageKey = 'property-filters'
+}: UseFiltersProps) => {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const isInitialized = useRef(false);
+  const lastAppliedFilters = useRef<string>('');
+
   const initialFilterState = useMemo(() => {
     const initialState: FilterState = {};
     initialFilters.forEach(filter => {
@@ -38,13 +48,121 @@ export const useFilters = ({ filters: initialFilters, onFiltersChange }: UseFilt
     return initialState;
   }, [initialFilters]);
 
-  // Estado de filtros pendientes (lo que ve el usuario)
-  const [pendingFilters, setPendingFilters] = useState<FilterState>(initialFilterState);
-  
-  // Estado de filtros aplicados (lo que se usa para filtrar)
-  const [appliedFilters, setAppliedFilters] = useState<FilterState>(initialFilterState);
+  const loadInitialFilters = useCallback(() => {
+    if (searchParams) {
+      const urlFilters: FilterState = { ...initialFilterState };
+      let hasURLFilters = false;
+      
+      initialFilters.forEach(filter => {
+        switch (filter.type) {
+          case 'range':
+            const minParam = searchParams.get(`${filter.id}Min`);
+            const maxParam = searchParams.get(`${filter.id}Max`);
+            if (minParam || maxParam) {
+              urlFilters[filter.id] = {
+                min: minParam ? parseInt(minParam) : (filter.min || 0),
+                max: maxParam ? parseInt(maxParam) : (filter.max || 100)
+              };
+              hasURLFilters = true;
+            }
+            break;
+          case 'select':
+            const selectParam = searchParams.get(filter.id);
+            if (selectParam) {
+              urlFilters[filter.id] = selectParam;
+              hasURLFilters = true;
+            }
+            break;
+          case 'checkbox':
+            const checkboxParam = searchParams.get(filter.id);
+            if (checkboxParam) {
+              urlFilters[filter.id] = checkboxParam.split(',').filter(Boolean);
+              hasURLFilters = true;
+            }
+            break;
+          case 'text':
+            const textParam = searchParams.get(filter.id);
+            if (textParam) {
+              urlFilters[filter.id] = textParam;
+              hasURLFilters = true;
+            }
+            break;
+        }
+      });
 
-  // Update a specific filter (solo actualiza el estado pendiente)
+      if (hasURLFilters) {
+        return urlFilters;
+      }
+    }
+
+    return getJSONFromStorage<FilterState>(storageKey, initialFilterState);
+  }, [searchParams, initialFilters, initialFilterState, storageKey]);
+
+  const [pendingFilters, setPendingFilters] = useState<FilterState>(() => loadInitialFilters());
+  const [appliedFilters, setAppliedFilters] = useState<FilterState>(() => loadInitialFilters());
+
+  const updateURL = useCallback((filters: FilterState) => {
+    const params = new URLSearchParams();
+    
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value === '' || (Array.isArray(value) && value.length === 0)) {
+        return;
+      }
+
+      const filter = initialFilters.find(f => f.id === key);
+      if (!filter) return;
+
+      switch (filter.type) {
+        case 'range':
+          const rangeValue = value as { min: number; max: number };
+          if (rangeValue.min > (filter.min || 0)) {
+            params.set(`${key}Min`, rangeValue.min.toString());
+          }
+          if (rangeValue.max < (filter.max || 100)) {
+            params.set(`${key}Max`, rangeValue.max.toString());
+          }
+          break;
+        case 'select':
+          if (value !== filter.defaultValue && value !== '') {
+            params.set(key, value as string);
+          }
+          break;
+        case 'checkbox':
+          const checkboxValue = value as string[];
+          if (checkboxValue.length > 0) {
+            params.set(key, checkboxValue.join(','));
+          }
+          break;
+        case 'text':
+          if (value !== filter.defaultValue && value !== '') {
+            params.set(key, value as string);
+          }
+          break;
+      }
+    });
+    
+    const currentURL = window.location.search;
+    const newURL = params.toString() ? `?${params.toString()}` : window.location.pathname;
+    
+    if (currentURL !== newURL) {
+      router.replace(newURL, { scroll: false });
+    }
+  }, [initialFilters, router]);
+
+  useEffect(() => {
+    if (!isInitialized.current) {
+      isInitialized.current = true;
+      return;
+    }
+
+    const filtersString = JSON.stringify(appliedFilters);
+    if (filtersString !== lastAppliedFilters.current) {
+      lastAppliedFilters.current = filtersString;
+      updateURL(appliedFilters);
+      setJSONToStorage(storageKey, appliedFilters);
+    }
+  }, [appliedFilters, updateURL, storageKey]);
+
   const updateFilter = useCallback((filterId: string, value: unknown) => {
     setPendingFilters(prev => ({
       ...prev,
@@ -52,27 +170,22 @@ export const useFilters = ({ filters: initialFilters, onFiltersChange }: UseFilt
     }));
   }, []);
 
-  // Update range filter
   const updateRangeFilter = useCallback((filterId: string, min: number, max: number) => {
     updateFilter(filterId, { min, max });
   }, [updateFilter]);
 
-  // Update select filter
   const updateSelectFilter = useCallback((filterId: string, value: string | number) => {
     updateFilter(filterId, value);
   }, [updateFilter]);
 
-  // Update checkbox filter
   const updateCheckboxFilter = useCallback((filterId: string, values: string[]) => {
     updateFilter(filterId, values);
   }, [updateFilter]);
 
-  // Update text filter
   const updateTextFilter = useCallback((filterId: string, value: string) => {
     updateFilter(filterId, value);
   }, [updateFilter]);
 
-  // Aplicar filtros solo si realmente cambiaron
   const applyFilters = useCallback(() => {
     if (JSON.stringify(pendingFilters) !== JSON.stringify(appliedFilters)) {
       setAppliedFilters(pendingFilters);
@@ -102,7 +215,6 @@ export const useFilters = ({ filters: initialFilters, onFiltersChange }: UseFilt
     }
   }, [pendingFilters, appliedFilters, onFiltersChange, initialFilters]);
 
-  // Resetear filtros solo si realmente cambiaron
   const resetFilters = useCallback(() => {
     if (JSON.stringify(appliedFilters) !== JSON.stringify(initialFilterState)) {
       setPendingFilters(initialFilterState);
@@ -111,12 +223,10 @@ export const useFilters = ({ filters: initialFilters, onFiltersChange }: UseFilt
     }
   }, [appliedFilters, initialFilterState, onFiltersChange]);
 
-  // Check if there are pending changes
   const hasPendingChanges = useCallback(() => {
     return JSON.stringify(pendingFilters) !== JSON.stringify(appliedFilters);
   }, [pendingFilters, appliedFilters]);
 
-  // Get active filters count (basado en filtros aplicados)
   const getActiveFiltersCount = useCallback((filters: IFilterConfig[]) => {
     return Object.entries(appliedFilters).reduce((count, [key, value]) => {
       const filter = filters.find(f => f.id === key);
@@ -150,29 +260,21 @@ export const useFilters = ({ filters: initialFilters, onFiltersChange }: UseFilt
     }, 0);
   }, [appliedFilters]);
 
-  // Get filter configuration by ID
   const getFilterConfig = useCallback((filterId: string) => {
     return initialFilters.find(filter => filter.id === filterId);
   }, [initialFilters]);
 
   return {
-    // Estados
-    pendingFilters,      // Filtros que ve el usuario (pendientes de aplicar)
-    appliedFilters,      // Filtros que están realmente aplicados
-    
-    // Funciones de actualización (solo afectan filtros pendientes)
+    pendingFilters,
+    appliedFilters,
     updateFilter,
     updateRangeFilter,
     updateSelectFilter,
     updateCheckboxFilter,
     updateTextFilter,
-    
-    // Funciones de control
-    applyFilters,        // Aplica los filtros pendientes
-    resetFilters,        // Limpia todos los filtros
-    
-    // Utilidades
-    hasPendingChanges,   // Verifica si hay cambios pendientes
+    applyFilters,
+    resetFilters,
+    hasPendingChanges,
     getActiveFiltersCount,
     getFilterConfig,
     initialFilters

@@ -4,8 +4,9 @@ import {
   LoadScript,
   Marker,
   InfoWindow,
+  MarkerClustererF,
 } from "@react-google-maps/api";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import type { Property } from "@/gql/graphql";
 import PropertyCardContent from "@/components/property-card/property-card-content";
 
@@ -20,13 +21,13 @@ const containerStyle = {
 
 const Map: React.FC<IMapProps> = ({ properties }: IMapProps) => {
   const [selected, setSelected] = useState<Property | null>(null);
+  const [mapRef, setMapRef] = useState<google.maps.Map | null>(null);
 
-  const center = properties.length
-    ? {
-        lat: properties[0].location.lat,
-        lng: properties[0].location.lng,
-      }
-    : { lat: 6.2442, lng: -75.5812 };
+  const initialCenter = useMemo(() => {
+    return properties.length
+      ? { lat: properties[0].location.lat, lng: properties[0].location.lng }
+      : { lat: 6.2442, lng: -75.5812 };
+  }, [properties]);
 
   return (
     <MapContainer>
@@ -36,24 +37,38 @@ const Map: React.FC<IMapProps> = ({ properties }: IMapProps) => {
         >
           <GoogleMap
             mapContainerStyle={containerStyle}
-            center={center}
+            center={initialCenter}
             zoom={13}
+            onLoad={(map) => setMapRef(map)}
             onClick={() => setSelected(null)}
             options={{
               mapTypeControl: false,
               streetViewControl: false,
             }}
           >
-            {properties.map((property) => (
-              <Marker
-                key={property.id}
-                position={{
-                  lat: property.location.lat,
-                  lng: property.location.lng,
-                }}
-                onClick={() => setSelected(property)}
-              />
-            ))}
+            <MarkerClustererF>
+              {(clusterer) => (
+                <>
+                  {properties.map((property) => (
+                    <Marker
+                      key={property.id}
+                      position={{
+                        lat: property.location.lat,
+                        lng: property.location.lng,
+                      }}
+                      clusterer={clusterer}
+                      onClick={() => {
+                        setSelected(property);
+                        mapRef?.panTo({
+                          lat: property.location.lat,
+                          lng: property.location.lng,
+                        });
+                      }}
+                    />
+                  ))}
+                </>
+              )}
+            </MarkerClustererF>
 
             {selected && (
               <InfoWindow
